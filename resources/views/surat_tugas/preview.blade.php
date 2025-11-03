@@ -1,10 +1,12 @@
-@extends('layouts.dashboard')
+@extends('layouts.app')
 
 @section('content')
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3>📜 Preview Surat Tugas</h3>
-        <a href="{{ route('surat_tugas.download', $suratTugas->id) }}" class="btn btn-primary">⬇️ Download PDF</a>
+        <a href="{{ route('surat_tugas.downloadPdf', $suratTugas->id) }}" class="btn btn-primary">
+            ⬇️ Download PDF
+        </a>
     </div>
 
     <div class="card shadow-sm p-4">
@@ -44,7 +46,7 @@
     </div>
 
 
-    <a href="{{ route('surat_tugas.index') }}" class="btn btn-dark mt-3">⬅️ Kembali</a>
+    <a href="{{ route('dashboard') }}" class="btn btn-dark mt-3">⬅️ Kembali</a>
 
 </div>
 @endsection

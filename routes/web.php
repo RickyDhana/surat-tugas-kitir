@@ -42,17 +42,17 @@ Route::middleware(['auth'])->group(function () {
     // ===============================
 
     // ✅ Khusus role Kepala Biro => CRUD + PDF
-    Route::middleware(['role:kepala_biro'])->group(function () {
-        Route::get('surat_tugas/create', [SuratTugasController::class, 'create'])->name('surat_tugas.create');
-        Route::post('surat_tugas/store', [SuratTugasController::class, 'store'])->name('surat_tugas.store');
-        Route::get('surat_tugas/{id}/edit', [SuratTugasController::class, 'edit'])->name('surat_tugas.edit');
-        Route::put('surat_tugas/{id}', [SuratTugasController::class, 'update'])->name('surat_tugas.update');
-        Route::delete('surat_tugas/{id}', [SuratTugasController::class, 'destroy'])->name('surat_tugas.destroy');
-        Route::get('surat_tugas/{id}/download-pdf', [SuratTugasController::class, 'downloadPdf'])->name('surat_tugas.downloadPdf');
-    });
+    // ✅ SURAT TUGAS CRUD (tanpa middleware role dulu)
+Route::get('surat_tugas/create', [SuratTugasController::class, 'create'])->name('surat_tugas.create');
+Route::post('surat_tugas/store', [SuratTugasController::class, 'store'])->name('surat_tugas.store');
+Route::get('surat_tugas/{id}/edit', [SuratTugasController::class, 'edit'])->name('surat_tugas.edit');
+Route::put('surat_tugas/{id}', [SuratTugasController::class, 'update'])->name('surat_tugas.update');
+Route::delete('surat_tugas/{id}', [SuratTugasController::class, 'destroy'])->name('surat_tugas.destroy');
+Route::get('surat_tugas/{id}/downloadPdf', [SuratTugasController::class, 'downloadPdf'])->name('surat_tugas.downloadPdf');
 
-    // ✅ Semua role bisa lihat list dan preview
-    Route::get('surat_tugas', [SuratTugasController::class, 'index'])->name('surat_tugas.index');
-    Route::get('surat_tugas/{id}', [SuratTugasController::class, 'show'])->name('surat_tugas.show');
-    Route::get('surat_tugas/{id}/preview', [SuratTugasController::class, 'preview'])->name('surat_tugas.preview');
+// ✅ Semua role boleh lihat dan preview
+Route::get('surat_tugas', [SuratTugasController::class, 'index'])->name('surat_tugas.index');
+Route::get('surat_tugas/{id}', [SuratTugasController::class, 'show'])->name('surat_tugas.show');
+Route::get('surat_tugas/{id}/preview', [SuratTugasController::class, 'preview'])->name('surat_tugas.preview');
+
 });

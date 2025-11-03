@@ -4,11 +4,11 @@
 <div class="container mt-4">
     <h3 class="mb-3">📄 Daftar Surat Tugas</h3>
 
-    @if(Auth::user()->isRole('kepala_biro'))
-        <div class="mb-3">
-            <a href="{{ route('surat_tugas.create') }}" class="btn btn-primary">+ Buat Surat Tugas</a>
-        </div>
-    @endif
+    @if(Auth::check() && Auth::user()->isRole('kepala_biro'))
+    <div class="mb-3">
+        <a href="{{ route('surat_tugas.create') }}" class="btn btn-primary">+ Buat Surat Tugas</a>
+    </div>
+@endif
 
     <table class="table table-bordered table-striped">
         <thead class="table-light">

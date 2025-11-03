@@ -90,7 +90,7 @@
                 <thead class="bg-gray-100">
                     <tr>
                         <th class="px-4 py-2 border">No</th>
-                        <th class="px-4 py-2 border">Nomor Surat</th>
+                        <th class="px-4 py-2 border">Nomor Pesanan</th>
                         <th class="px-4 py-2 border">Tanggal</th>
                         <th class="px-4 py-2 border">Status</th>
                         <th class="px-4 py-2 border text-center">Aksi</th>
@@ -100,15 +100,21 @@
                     @forelse($suratTugas as $i => $s)
                         <tr class="hover:bg-gray-50">
                             <td class="border px-4 py-2">{{ $loop->iteration }}</td>
-                            <td class="border px-4 py-2">{{ $s->nomor_surat }}</td>
-                            <td class="border px-4 py-2">{{ $s->tanggal ?? '-' }}</td>
+                            <td class="border px-4 py-2">{{ $s->nomor_pesanan }}</td>
+                            <td class="border px-4 py-2">
+                                {{ $s->tanggal ? \Carbon\Carbon::parse($s->tanggal)->format('d-m-Y') : now()->format('d-m-Y') }}
+                            </td>
                             <td class="border px-4 py-2">{{ ucfirst($s->status ?? '-') }}</td>
                             <td class="border px-4 py-2 text-center">
-                                @if(Auth::user()->role === 'kabiro')
-                                    <a href="{{ route('surat_tugas.show', $s->id) }}" class="text-blue-600 hover:text-blue-800">Edit</a>
+                                {{-- Tombol Detail tampil jika Role = kepala_biro atau penera --}}
+                                @if(in_array(Auth::user()->role, ['kepala_biro', 'penera']))
+                                    <a href="{{ route('surat_tugas.show', $s->id) }}"
+                                    class="text-blue-600 hover:text-blue-800 font-semibold">Detail</a>
                                 @endif
 
-                                <a href="{{ route('surat_tugas.preview', $s->id) }}" class="text-gray-600 hover:text-gray-800 ml-3">Preview</a>
+                                {{-- Tombol Preview tampil untuk semua role --}}
+                                <a href="{{ route('surat_tugas.preview', $s->id) }}"
+                                class="ml-3 text-gray-600 hover:text-gray-800 font-semibold">Preview</a>
                             </td>
                         </tr>
                     @empty
@@ -147,18 +153,21 @@
     <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 m-4">
         <h3 class="text-xl font-semibold mb-4 text-gray-800">Buat Surat Tugas Baru</h3>
         <form action="{{ route('surat_tugas.store') }}" method="POST">
-            @csrf
-            <div class="mb-4">
-                <label for="nomor_surat" class="block text-sm font-medium text-gray-700 mb-1">Nomor Surat</label>
-                <input type="text" name="nomor_surat" id="nomor_surat" 
-                       class="border border-gray-300 rounded-lg w-full px-3 py-2 focus:ring-2 focus:ring-blue-500" 
-                       required>
-            </div>
-            <div class="flex justify-end space-x-3 mt-6">
-                <button type="button" id="closeModalSurat" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300">Batal</button>
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Simpan</button>
-            </div>
-        </form>
+    @csrf
+    <div class="mb-4">
+        <label for="nomor_pesanan" class="block text-sm font-medium text-gray-700 mb-1">Nomor Pesanan</label>
+        <input type="text" name="nomor_pesanan" id="nomor_pesanan"
+               class="border border-gray-300 rounded-lg w-full px-3 py-2 focus:ring-2 focus:ring-blue-500"
+               required>
+    </div>
+
+    <!-- tambah field lain sesuai kebutuhan seperti nomor_kt, uraian_pekerjaan, penera[] dsb -->
+
+    <div class="flex justify-end space-x-3 mt-6">
+        <button type="button" id="closeModalSurat" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300">Batal</button>
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Simpan</button>
+    </div>
+</form>
     </div>
 </div>
 

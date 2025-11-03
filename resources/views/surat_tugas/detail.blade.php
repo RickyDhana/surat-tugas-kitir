@@ -1,4 +1,4 @@
-@extends('layouts.dashboard')
+@extends('layouts.app')
 
 @section('content')
 <div class="container mt-4">
@@ -33,10 +33,6 @@
             </div>
         </div>
 
-        <div class="mt-3 d-flex gap-2">
-            <button type="submit" class="btn btn-success">💾 Simpan</button>
-            <a href="{{ route('surat_tugas.preview', $suratTugas->id) }}" class="btn btn-secondary">👁️ Preview</a>
-        </div>
     </form>
 </div>
 @endsection
