@@ -14,7 +14,7 @@ class SuratTugasController extends Controller
     {
         $user = Auth::user();
 
-        // jika penera, tampilkan hanya yang ditugaskan kepadanya
+        // Jika penera, tampilkan hanya surat tugas yang ditugaskan padanya
         if ($user && $user->isRole('penera')) {
             $suratTugas = SuratTugas::whereHas('peneras', function($q) use ($user) {
                 $q->where('nama_penera', $user->nama);
@@ -28,111 +28,158 @@ class SuratTugasController extends Controller
 
     public function create()
     {
-        // form kosong (kepala biro)
-        return view('surat_tugas.detail', ['suratTugas' => null]);
+        $surat = new SuratTugas(); // biar tidak null di view
+        return view('surat_tugas.detail', [
+            'surat' => $surat,
+            'role' => Auth::user()->role ?? null,
+            'peneraTugas' => collect()
+        ]);
     }
 
     public function store(Request $request)
-    {
-        // toleran terhadap nama field (nomor_pesanan atau nomor_surat)
-        $payload = $request->all();
+{
+    $validated = $request->validate([
+        'nomor_pesanan' => 'required|string|max:100',
+        'tanggal' => 'nullable|date',
+        'nomor_kt' => 'nullable|string|max:100',
+        'uraian_pekerjaan' => 'nullable|string|max:250',
+        'rencana_jam_orang' => 'nullable|string|max:100',
+        'rencana_mulai' => 'nullable|date',
+        'rencana_selesai' => 'nullable|date',
+    ]);
 
-        // Normalize: jika user mengirim 'nomor_surat', ubah jadi 'nomor_pesanan'
-        if (isset($payload['nomor_surat']) && !isset($payload['nomor_pesanan'])) {
-            $payload['nomor_pesanan'] = $payload['nomor_surat'];
+    $dataToSave = array_merge($validated, [
+        'kabiro_kalibrasi' => $request->user()->nama ?? 'Dwi Adi',
+        'status' => 'Draft',
+        'tanggal' => now(),
+    ]);
+
+    $surat = SuratTugas::create($dataToSave);
+
+    // Simpan daftar penera (jika dipilih)
+    if ($request->filled('penera')) {
+        foreach ($request->input('penera') as $p) {
+            $surat->peneras()->create([
+                'nama_penera' => $p,
+            ]);
         }
-
-        $validated = $request->validate([
-            'nomor_pesanan' => 'required|string|max:100',
-            'tanggal' => 'nullable|date',
-            'nomor_kt' => 'nullable|string|max:100',
-            'uraian_pekerjaan' => 'nullable|string|max:250',
-            // tambahkan rule lain jika perlu
-        ]);
-
-        // Gunakan hasil validasi + allow fallback fields
-        $dataToSave = array_merge($validated, [
-            'kabiro_kalibrasi' => $payload['kabiro_kalibrasi'] ?? ($request->user()->nama ?? 'Dwi Adi'),
-            'status' => $payload['status'] ?? 'Draft',
-        ]);
-
-        $surat = SuratTugas::create($dataToSave);
-
-        // Jika ada daftar penera (misal multi-select dari form), simpan relasi (jika form kirim penera[]).
-        if ($request->has('penera') && is_array($request->input('penera'))) {
-            foreach ($request->input('penera') as $p) {
-                // $p bisa berupa array ['nama' => 'Candra', 'nip' => '123']
-                if (is_array($p)) {
-                    $surat->peneras()->create([
-                        'nama_penera' => $p['nama'] ?? null,
-                        'nip' => $p['nip'] ?? null,
-                    ]);
-                } else {
-                    // jika hanya nama
-                    $surat->peneras()->create([
-                        'nama_penera' => $p,
-                    ]);
-                }
-            }
-        }
-
-        return redirect()->route('dashboard')->with('surat_message', 'Surat tugas berhasil dibuat.');
     }
+
+    return redirect()->route('surat_tugas.index')->with('msg', '✅ Surat tugas berhasil dibuat.');
+}
 
     public function show($id)
     {
-        $suratTugas = SuratTugas::with('peneras')->findOrFail($id);
-        $user = Auth::user();
+        $surat = SuratTugas::with('peneras')->findOrFail($id);
+        $role = Auth::user()->role ?? null;
+        $peneraTugas = $surat->peneras;
 
-        return view('surat_tugas.detail', compact('suratTugas', 'user'));
+        return view('surat_tugas.detail', compact('surat', 'role', 'peneraTugas'));
     }
 
     public function edit($id)
     {
-        $suratTugas = SuratTugas::with('peneras')->findOrFail($id);
-        return view('surat_tugas.detail', compact('suratTugas'));
+        $surat = SuratTugas::with('peneras')->findOrFail($id);
+        $role = Auth::user()->role ?? null;
+        $peneraTugas = $surat->peneras;
+
+        return view('surat_tugas.detail', compact('surat', 'role', 'peneraTugas'));
     }
 
     public function update(Request $request, $id)
-    {
-        $surat = SuratTugas::findOrFail($id);
+{
+    $surat = SuratTugas::findOrFail($id);
 
-        $payload = $request->all();
-        if (isset($payload['nomor_surat']) && !isset($payload['nomor_pesanan'])) {
-            $payload['nomor_pesanan'] = $payload['nomor_surat'];
+    $validated = $request->validate([
+        'nomor_pesanan' => 'required|string|max:100',
+        'tanggal' => 'nullable|date',
+        'nomor_kt' => 'nullable|string|max:100',
+        'uraian_pekerjaan' => 'nullable|string|max:250',
+        'rencana_jam_orang' => 'nullable|string|max:100',
+        'rencana_mulai' => 'nullable|date',
+        'rencana_selesai' => 'nullable|date',
+    ]);
+
+    $surat->update($validated);
+
+    // Update daftar penera (hapus lama dulu)
+    $surat->peneras()->delete();
+    if ($request->filled('penera')) {
+        foreach ($request->input('penera') as $p) {
+            $surat->peneras()->create([
+                'nama_penera' => $p,
+            ]);
         }
-
-        $validated = $request->validate([
-            'nomor_pesanan' => 'required|string|max:100',
-            'tanggal' => 'nullable|date',
-            'nomor_kt' => 'nullable|string|max:100',
-            'uraian_pekerjaan' => 'nullable|string|max:250',
-        ]);
-
-        $surat->update($validated);
-
-        // (Opsional) update peneras jika dikirim — implementasi tergantung form
-        return redirect()->route('surat_tugas.index')->with('surat_message', 'Surat tugas diperbarui.');
     }
+
+    return redirect()->route('surat_tugas.show', $surat->id)
+        ->with('msg', '✅ Data surat tugas berhasil diperbarui.');
+}
+
+    public function realisasiUpdate(Request $request, $id)
+{
+    $surat = SuratTugas::findOrFail($id);
+    $user = Auth::user();
+
+    // Cari penera yang sedang login
+    $penera = PeneraTugas::where('surat_tugas_id', $id)
+        ->where('nama_penera', $user->nama)
+        ->first();
+
+    // Jika belum ada, buat baru
+    if (!$penera) {
+        $penera = new PeneraTugas();
+        $penera->surat_tugas_id = $id;
+        $penera->nama_penera = $user->nama;
+        $penera->nip = $user->nip ?? '-';
+    }
+
+    // Ambil semua input realisasi yang ada
+    $fields = [
+        'catatan', 'realisasi_jam_orang',
+        'realisasi_mulai', 'realisasi_selesai'
+    ];
+
+    // Tambahkan kolom dinamis B1–B10
+    for ($i = 1; $i <= 10; $i++) {
+        foreach (['c1','c2','r1','r2','d1','d2'] as $suffix) {
+            $fields[] = "realisasi_b{$i}_{$suffix}";
+        }
+    }
+
+    // Update semua field yang ada di request
+    foreach ($fields as $f) {
+        if ($request->has($f)) {
+            $penera->$f = $request->input($f);
+        }
+    }
+
+    $penera->save();
+
+    return redirect()->route('surat_tugas.show', $id)
+        ->with('msg', '✅ Data realisasi berhasil diperbarui.');
+}
 
     public function preview($id)
     {
-        $suratTugas = SuratTugas::with('peneras')->findOrFail($id);
-        return view('surat_tugas.preview', compact('suratTugas'));
+        $surat = SuratTugas::with('peneras')->findOrFail($id);
+        return view('surat_tugas.preview', compact('surat'));
     }
 
     public function downloadPdf($id)
     {
-        $suratTugas = SuratTugas::with('peneras')->findOrFail($id);
-        $pdf = Pdf::loadView('surat_tugas.preview', compact('suratTugas'))
+        $surat = SuratTugas::with('peneras')->findOrFail($id);
+        $pdf = Pdf::loadView('surat_tugas.preview', compact('surat'))
             ->setPaper([0, 0, 595.28, 420.94], 'landscape');
-        return $pdf->download('Surat_Tugas_' . ($suratTugas->nomor_pesanan ?? $suratTugas->id) . '.pdf');
+
+        return $pdf->download('Surat_Tugas_' . ($surat->nomor_pesanan ?? $surat->id) . '.pdf');
     }
 
     public function destroy($id)
     {
         $surat = SuratTugas::findOrFail($id);
         $surat->delete();
-        return redirect()->route('surat_tugas.index')->with('surat_message', 'Surat tugas dihapus.');
+
+        return redirect()->route('surat_tugas.index')->with('msg', 'Surat tugas dihapus.');
     }
 }

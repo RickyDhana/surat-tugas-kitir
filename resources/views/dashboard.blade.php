@@ -106,11 +106,8 @@
                             </td>
                             <td class="border px-4 py-2">{{ ucfirst($s->status ?? '-') }}</td>
                             <td class="border px-4 py-2 text-center">
-                                {{-- Tombol Detail tampil jika Role = kepala_biro atau penera --}}
-                                @if(in_array(Auth::user()->role, ['kepala_biro', 'penera']))
-                                    <a href="{{ route('surat_tugas.show', $s->id) }}"
-                                    class="text-blue-600 hover:text-blue-800 font-semibold">Detail</a>
-                                @endif
+                            {{-- Semua role boleh buka Detail (admin tetap read-only di halaman detail) --}}
+                            <a href="{{ route('surat_tugas.show', $s->id) }}" class="text-blue-600 hover:text-blue-800 font-semibold">Detail</a>
 
                                 {{-- Tombol Preview tampil untuk semua role --}}
                                 <a href="{{ route('surat_tugas.preview', $s->id) }}"

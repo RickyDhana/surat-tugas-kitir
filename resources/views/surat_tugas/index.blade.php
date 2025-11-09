@@ -8,7 +8,7 @@
     <div class="mb-3">
         <a href="{{ route('surat_tugas.create') }}" class="btn btn-primary">+ Buat Surat Tugas</a>
     </div>
-@endif
+    @endif
 
     <table class="table table-bordered table-striped">
         <thead class="table-light">
@@ -18,7 +18,7 @@
                 <th>Penera Ditugaskan</th>
                 <th>Tanggal</th>
                 <th>Status</th>
-                <th width="180">Aksi</th>
+                <th width="220">Aksi</th>
             </tr>
         </thead>
         <tbody>
@@ -27,9 +27,9 @@
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $item->nomor_pesanan }}</td>
                     <td>
-                        @foreach($item->peneras as $p)
-                            <span class="badge bg-info text-dark">{{ $p->nama_penera }}</span>
-                        @endforeach
+@foreach($item->peneraTugas ?? [] as $p)
+    <span class="badge bg-info text-dark">{{ $p->nama_penera }}</span>
+@endforeach
                     </td>
                     <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d/m/Y') }}</td>
                     <td>

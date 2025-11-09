@@ -16,8 +16,8 @@ class SuratTugas extends Model
         'kabiro_kalibrasi', 'status'
     ];
 
-    public function peneras()
+    public function suratTugas()
     {
-        return $this->hasMany(PeneraTugas::class);
+        return $this->belongsTo(SuratTugas::class, 'surat_tugas_id');
     }
 }
