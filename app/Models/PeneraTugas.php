@@ -34,8 +34,10 @@ class PeneraTugas extends Model
 
     public function suratTugas()
     {
-        return $this->belongsTo(SuratTugas::class, 'surat_tugas_id');
+        return $this->belongsTo(SuratTugas::class, 'surat_tugas_id', 'id');
     }
+
+    
 
 
 }

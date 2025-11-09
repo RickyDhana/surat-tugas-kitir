@@ -65,7 +65,7 @@ class SuratTugasController extends Controller
         }
     }
 
-    return redirect()->route('surat_tugas.index')->with('msg', '✅ Surat tugas berhasil dibuat.');
+    return redirect()->route('dashboard')->with('msg', '✅ Surat tugas berhasil dibuat.');
 }
 
     public function show($id)
@@ -121,12 +121,11 @@ class SuratTugasController extends Controller
     $surat = SuratTugas::findOrFail($id);
     $user = Auth::user();
 
-    // Cari penera yang sedang login
+    // cari record penera
     $penera = PeneraTugas::where('surat_tugas_id', $id)
         ->where('nama_penera', $user->nama)
         ->first();
 
-    // Jika belum ada, buat baru
     if (!$penera) {
         $penera = new PeneraTugas();
         $penera->surat_tugas_id = $id;
@@ -134,20 +133,30 @@ class SuratTugasController extends Controller
         $penera->nip = $user->nip ?? '-';
     }
 
-    // Ambil semua input realisasi yang ada
     $fields = [
         'catatan', 'realisasi_jam_orang',
         'realisasi_mulai', 'realisasi_selesai'
     ];
 
-    // Tambahkan kolom dinamis B1–B10
-    for ($i = 1; $i <= 10; $i++) {
-        foreach (['c1','c2','r1','r2','d1','d2'] as $suffix) {
-            $fields[] = "realisasi_b{$i}_{$suffix}";
+    // tentukan prefix penera
+    $map = [
+        'Pak Candra' => 'c',
+        'Pak Rizqi' => 'r',
+        'Pak Rino' => 'd',
+    ];
+    $prefix = $map[$user->nama] ?? null;
+
+    if ($prefix) {
+        for ($i = 1; $i <= 10; $i++) {
+            foreach ([1,2] as $n) {
+                $key = "realisasi_b{$i}_{$prefix}{$n}";
+                if ($request->has($key)) {
+                    $penera->$key = $request->input($key);
+                }
+            }
         }
     }
 
-    // Update semua field yang ada di request
     foreach ($fields as $f) {
         if ($request->has($f)) {
             $penera->$f = $request->input($f);
@@ -161,17 +170,32 @@ class SuratTugasController extends Controller
 }
 
     public function preview($id)
-    {
-        $surat = SuratTugas::with('peneras')->findOrFail($id);
-        return view('surat_tugas.preview', compact('surat'));
-    }
+{
+    $surat = \App\Models\SuratTugas::with('peneras')->findOrFail($id);
+    $peneraTugas = $surat->peneras;
 
-    public function downloadPdf($id)
-    {
-        $surat = SuratTugas::with('peneras')->findOrFail($id);
-        $pdf = Pdf::loadView('surat_tugas.preview', compact('surat'))
+    // ✅ kalau ada query ?download=true, maka langsung buat PDF
+    if (request()->has('download')) {
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('surat_tugas.preview', compact('surat', 'peneraTugas'))
             ->setPaper([0, 0, 595.28, 420.94], 'landscape');
 
+        return $pdf->download('Surat_Tugas_' . ($surat->nomor_pesanan ?? $surat->id) . '.pdf');
+    }
+
+    // ✅ kalau tidak ada ?download=true → tampilkan halaman biasa
+    return view('surat_tugas.preview', compact('surat', 'peneraTugas'));
+}
+
+        public function downloadPdf($id)
+    {
+        $surat = SuratTugas::with('peneras')->findOrFail($id);
+        $peneraTugas = $surat->peneras;
+
+        // ✅ gunakan view yang sama dengan preview
+        $pdf = Pdf::loadView('surat_tugas.preview', compact('surat', 'peneraTugas'))
+            ->setPaper([0, 0, 595.28, 420.94], 'landscape');
+
+        // download file dengan nama rapi
         return $pdf->download('Surat_Tugas_' . ($surat->nomor_pesanan ?? $surat->id) . '.pdf');
     }
 

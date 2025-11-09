@@ -14,34 +14,31 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // KITIR
-    Route::get('/kitir', [KitirController::class, 'index'])->name('kitir.index');
-    Route::post('/kitir/store', [KitirController::class, 'store'])->name('kitir.store');
-    Route::get('/kitir/{id}', [KitirController::class, 'show'])->name('kitir.show');
-    Route::get('/kitir/{id}/preview', [KitirController::class, 'preview'])->name('kitir.preview');
-    Route::get('/kitir/{id}/download', [KitirController::class, 'downloadPdf'])->name('kitir.download');
-    Route::get('/kitir/{id}/edit', [KitirController::class, 'edit'])->name('kitir.edit');
-    Route::put('/kitir/{id}', [KitirController::class, 'update'])->name('kitir.update');
-    Route::delete('/kitir/{id}', [KitirController::class, 'destroy'])->name('kitir.destroy');
-    Route::post('/kitir/{id}/step', [KitirController::class, 'storeStep'])->name('kitir.step.store');
-    Route::post('/kitir/{id}/catatan', [KitirController::class, 'storeCatatan'])->name('kitir.catatan.store');
+    // ================= KITIR =================
+    Route::prefix('kitir')->name('kitir.')->group(function () {
+        Route::get('/', [KitirController::class, 'index'])->name('index');
+        Route::post('/store', [KitirController::class, 'store'])->name('store');
+        Route::get('/{id}', [KitirController::class, 'show'])->name('show');
+        Route::get('/{id}/preview', [KitirController::class, 'preview'])->name('preview');
+        Route::get('/{id}/download', [KitirController::class, 'downloadPdf'])->name('download');
+        Route::get('/{id}/edit', [KitirController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [KitirController::class, 'update'])->name('update');
+        Route::delete('/{id}', [KitirController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/step', [KitirController::class, 'storeStep'])->name('step.store');
+        Route::post('/{id}/catatan', [KitirController::class, 'storeCatatan'])->name('catatan.store');
+    });
 
-    // SURAT TUGAS
-    Route::get('/surat_tugas', [SuratTugasController::class, 'index'])->name('surat_tugas.index');
-    Route::get('/surat_tugas/create', [SuratTugasController::class, 'create'])->name('surat_tugas.create');
-    Route::post('/surat_tugas/store', [SuratTugasController::class, 'store'])->name('surat_tugas.store');
-    Route::get('/surat_tugas/{id}', [SuratTugasController::class, 'show'])->name('surat_tugas.show');
-    Route::get('/surat_tugas/{id}/edit', [SuratTugasController::class, 'edit'])->name('surat_tugas.edit');
-    Route::put('/surat_tugas/{id}', [SuratTugasController::class, 'update'])->name('surat_tugas.update');
-    Route::delete('/surat_tugas/{id}', [SuratTugasController::class, 'destroy'])->name('surat_tugas.destroy');
-    Route::get('/surat_tugas/{id}/preview', [SuratTugasController::class, 'preview'])->name('surat_tugas.preview');
-    Route::get('/surat_tugas/{id}/downloadPdf', [SuratTugasController::class, 'downloadPdf'])->name('surat_tugas.downloadPdf');
-
-Route::put('/penera/{id}', [SuratTugasController::class, 'updatePenera'])->name('penera.update');
-
-
+    // ================= SURAT TUGAS =================
+    Route::prefix('surat_tugas')->name('surat_tugas.')->group(function () {
+        Route::get('/', [SuratTugasController::class, 'index'])->name('index');
+        Route::get('/create', [SuratTugasController::class, 'create'])->name('create');
+        Route::post('/store', [SuratTugasController::class, 'store'])->name('store');
+        Route::get('/{id}', [SuratTugasController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [SuratTugasController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [SuratTugasController::class, 'update'])->name('update');
+        Route::delete('/{id}', [SuratTugasController::class, 'destroy'])->name('destroy');
+        Route::get('/{id}/preview', [SuratTugasController::class, 'preview'])->name('preview');
+        Route::get('/{id}/downloadPdf', [SuratTugasController::class, 'downloadPdf'])->name('downloadPdf');
+        Route::put('/{id}/realisasi', [SuratTugasController::class, 'realisasiUpdate'])->name('realisasi.update');
+    });
 });
-
-// ROUTE TAMBAHAN UNTUK PENERA (update realisasi)
-Route::put('surat_tugas/{id}/realisasi', [App\Http\Controllers\SuratTugasController::class, 'realisasiUpdate'])
-    ->name('surat_tugas.realisasi.update');

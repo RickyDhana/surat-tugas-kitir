@@ -47,7 +47,7 @@
     </table>
 
     <div class="mt-4 text-center">
-        <a href="{{ route('surat_tugas.download', $surat->id) }}" class="btn btn-success">
+        <a href="{{ route('surat_tugas.preview', ['id' => $surat->id, 'download' => 'true']) }}" class="btn btn-success">
             ⬇ Download PDF
         </a>
         <a href="{{ route('surat_tugas.index') }}" class="btn btn-secondary">

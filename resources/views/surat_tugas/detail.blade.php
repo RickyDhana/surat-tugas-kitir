@@ -154,7 +154,7 @@
                                         <td class="border p-1 font-semibold">{{ $prefix }}</td>
                                         @for ($i = 1; $i <= 10; $i++)
                                             <td class="border p-1">
-                                                <input type="text" name="realisasi_b{{ $i }}_{{ strtolower($prefix) }}1"
+                                                <input type="text" name="realisasi_b{{ $i }}_{{ strtolower(substr($prefix,0,1)) }}1"
                                                     value="{{ old('realisasi_b'.$i.'_'.strtolower($prefix).'1', $peneraTugas->first()->{'realisasi_b'.$i.'_'.strtolower($prefix).'1'} ?? '') }}"
                                                     class="w-full border rounded p-1 text-center">
                                             </td>
