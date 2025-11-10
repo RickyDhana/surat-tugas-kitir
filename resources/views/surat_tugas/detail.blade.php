@@ -137,36 +137,36 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @php
-                                    $namaPeneraDipilih = collect($peneraTugas)->pluck('nama_penera')->toArray();
-                                    $mapKode = [
-                                        'Pak Candra' => 'Candra',
-                                        'Pak Rizqi' => 'Rizqi',
-                                        'Pak Rino' => 'Rino',
-                                    ];
-                                    $rows = [];
-                                    foreach ($namaPeneraDipilih as $p) {
-                                        if (isset($mapKode[$p])) $rows[$mapKode[$p]] = $mapKode[$p];
-                                    }
-                                @endphp
-                                @foreach ($rows as $prefix)
-                                    <tr>
-                                        <td class="border p-1 font-semibold">{{ $prefix }}</td>
-                                        @for ($i = 1; $i <= 10; $i++)
-                                            <td class="border p-1">
-                                                <input type="text" name="realisasi_b{{ $i }}_{{ strtolower(substr($prefix,0,1)) }}1"
-                                                    value="{{ old('realisasi_b'.$i.'_'.strtolower($prefix).'1', $peneraTugas->first()->{'realisasi_b'.$i.'_'.strtolower($prefix).'1'} ?? '') }}"
-                                                    class="w-full border rounded p-1 text-center">
-                                            </td>
-                                            <td class="border p-1">
-                                                <input type="text" name="realisasi_b{{ $i }}_{{ strtolower($prefix) }}2"
-                                                    value="{{ old('realisasi_b'.$i.'_'.strtolower($prefix).'2', $peneraTugas->first()->{'realisasi_b'.$i.'_'.strtolower($prefix).'2'} ?? '') }}"
-                                                    class="w-full border rounded p-1 text-center">
-                                            </td>
-                                        @endfor
-                                    </tr>
-                                @endforeach
-                            </tbody>
+    @php
+        $namaPeneraDipilih = collect($peneraTugas)->pluck('nama_penera')->toArray();
+        $mapKode = [
+            'Pak Candra' => 'c',
+            'Pak Rizqi' => 'r',
+            'Pak Rino' => 'd',
+        ];
+        $rows = [];
+        foreach ($namaPeneraDipilih as $p) {
+            if (isset($mapKode[$p])) $rows[$mapKode[$p]] = $p;
+        }
+    @endphp
+    @foreach ($rows as $prefix => $namaPenera)
+        <tr>
+            <td class="border p-1 font-semibold">{{ $namaPenera }}</td>
+            @for ($i = 1; $i <= 10; $i++)
+                <td class="border p-1">
+                    <input type="text" name="realisasi_b{{ $i }}_{{ $prefix }}1"
+                        value="{{ old('realisasi_b'.$i.'_'.$prefix.'1', $peneraTugas->where('nama_penera', $namaPenera)->first()?->{'realisasi_b'.$i.'_'.$prefix.'1'} ?? '') }}"
+                        class="w-full border rounded p-1 text-center">
+                </td>
+                <td class="border p-1">
+                    <input type="text" name="realisasi_b{{ $i }}_{{ $prefix }}2"
+                        value="{{ old('realisasi_b'.$i.'_'.$prefix.'2', $peneraTugas->where('nama_penera', $namaPenera)->first()?->{'realisasi_b'.$i.'_'.$prefix.'2'} ?? '') }}"
+                        class="w-full border rounded p-1 text-center">
+                </td>
+            @endfor
+        </tr>
+    @endforeach
+</tbody>
                         </table>
                     </div>
                 </div>
@@ -174,8 +174,12 @@
                 {{-- Catatan --}}
                 <div class="mt-4">
                     <label class="block text-sm">Catatan Pelaksanaan / Kendala / Progres / DLL</label>
+                    @php
+                        $peneraUser = $peneraTugas->where('nama_penera', Auth::user()->nama)->first();
+                    @endphp
+
                     <textarea name="catatan" rows="5" maxlength="700"
-                        class="w-full border rounded p-2">{{ old('catatan', $peneraTugas->first()->catatan ?? '') }}</textarea>
+                        class="w-full border rounded p-2">{{ old('catatan', $peneraUser->catatan ?? '') }}</textarea>
                 </div>
 
                 {{-- Jam Orang + Mulai + Selesai --}}
@@ -183,21 +187,21 @@
                     <div>
                         <label class="block text-sm">Jam Orang</label>
                         <input type="text" name="realisasi_jam_orang"
-                            value="{{ old('realisasi_jam_orang', $peneraTugas->first()->realisasi_jam_orang ?? '') }}"
+                            value="{{ old('realisasi_jam_orang', $peneraUser->realisasi_jam_orang ?? '') }}"
                             class="w-full border rounded p-2" placeholder="Masukkan jumlah jam">
                     </div>
 
                     <div>
                         <label class="block text-sm">Mulai</label>
                         <input type="date" name="realisasi_mulai"
-                            value="{{ old('realisasi_mulai', $peneraTugas->first()->realisasi_mulai ?? '') }}"
+                            value="{{ old('realisasi_mulai', $peneraUser->realisasi_mulai ?? '') }}"
                             class="w-full border rounded p-2">
                     </div>
 
                     <div>
                         <label class="block text-sm">Selesai</label>
                         <input type="date" name="realisasi_selesai"
-                            value="{{ old('realisasi_selesai', $peneraTugas->first()->realisasi_selesai ?? '') }}"
+                            value="{{ old('realisasi_selesai', $peneraUser->realisasi_selesai ?? '') }}"
                             class="w-full border rounded p-2">
                     </div>
                 </div>

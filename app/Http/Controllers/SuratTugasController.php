@@ -121,24 +121,30 @@ class SuratTugasController extends Controller
     $surat = SuratTugas::findOrFail($id);
     $user = Auth::user();
 
-    // cari record penera
+    // cari atau buat baru penera
     $penera = PeneraTugas::where('surat_tugas_id', $id)
         ->where('nama_penera', $user->nama)
-        ->first();
+        ->first() ?? new PeneraTugas([
+            'surat_tugas_id' => $id,
+            'nama_penera' => $user->nama,
+            'nip' => $user->nip ?? '-',
+        ]);
 
-    if (!$penera) {
-        $penera = new PeneraTugas();
-        $penera->surat_tugas_id = $id;
-        $penera->nama_penera = $user->nama;
-        $penera->nip = $user->nip ?? '-';
-    }
-
+    // daftar field yang boleh diupdate
     $fields = [
         'catatan', 'realisasi_jam_orang',
         'realisasi_mulai', 'realisasi_selesai'
     ];
 
-    // tentukan prefix penera
+    // ambil semua input dari request
+    foreach ($fields as $f) {
+        // hanya ubah kalau field dikirim dan tidak null
+        if ($request->filled($f)) {
+            $penera->$f = $request->input($f);
+        }
+    }
+
+    // proses kolom realisasi B1–B10
     $map = [
         'Pak Candra' => 'c',
         'Pak Rizqi' => 'r',
@@ -148,25 +154,19 @@ class SuratTugasController extends Controller
 
     if ($prefix) {
         for ($i = 1; $i <= 10; $i++) {
-            foreach ([1,2] as $n) {
+            foreach ([1, 2] as $n) {
                 $key = "realisasi_b{$i}_{$prefix}{$n}";
-                if ($request->has($key)) {
+                if ($request->filled($key)) {
                     $penera->$key = $request->input($key);
                 }
             }
         }
     }
 
-    foreach ($fields as $f) {
-        if ($request->has($f)) {
-            $penera->$f = $request->input($f);
-        }
-    }
-
     $penera->save();
 
     return redirect()->route('surat_tugas.show', $id)
-        ->with('msg', '✅ Data realisasi berhasil diperbarui.');
+        ->with('msg', '✅ Data realisasi berhasil diperbarui tanpa kehilangan data sebelumnya.');
 }
 
     public function preview($id)
