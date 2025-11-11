@@ -27,11 +27,11 @@
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $item->nomor_pesanan }}</td>
                     <td>
-@foreach($item->peneraTugas ?? [] as $p)
+@foreach($item->peneras ?? [] as $p)
     <span class="badge bg-info text-dark">{{ $p->nama_penera }}</span>
 @endforeach
                     </td>
-                    <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d/m/Y') }}</td>
+                    <td>{{ $item->tanggal ? \Carbon\Carbon::parse($item->tanggal)->format('d/m/Y') : '-' }}</td>
                     <td>
                         <span class="badge bg-{{ $item->status == 'Selesai' ? 'success' : 'secondary' }}">
                             {{ $item->status ?? 'Draft' }}

@@ -153,11 +153,12 @@ class KitirController extends Controller
         // Hak akses per role (seperti sebelumnya)
         $allowed = [
             'admin' => [
-                ['step' => 1, 'pos' => 'Y1'], ['step' => 1, 'pos' => 'Y2'],
+                ['step' => 1, 'pos' => 'Y1'],
                 ['step' => 6, 'pos' => 'Y2'],
                 ['step' => 7, 'pos' => 'Y1'], ['step' => 7, 'pos' => 'Y2'],
             ],
             'kepala_biro' => [
+                ['step' => 1, 'pos' => 'Y2'],
                 ['step' => 2, 'pos' => 'Y1'],
                 ['step' => 5, 'pos' => 'Y2'],
                 ['step' => 6, 'pos' => 'Y1'],

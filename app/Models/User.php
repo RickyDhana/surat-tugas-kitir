@@ -24,4 +24,17 @@ class User extends Authenticatable
         }
         return $this->role === $role;
     }
+
+    public function getNamaFormalAttribute()
+{
+    $nama = strtolower($this->nama);
+    if (str_contains($nama, 'rino')) {
+        return 'Pak Rino';
+    } elseif (str_contains($nama, 'rizqi') || str_contains($nama, 'rizky')) {
+        return 'Pak Rizqi';
+    } elseif (str_contains($nama, 'candra')) {
+        return 'Pak Candra';
+    }
+    return $this->nama;
+}
 }

@@ -124,23 +124,31 @@
             </tr>
         </thead>
         <tbody>
-            @foreach($steps as $no => $pair)
-                @php
-                    $y1 = $pair->where('posisi', 'Y1')->first();
-                    $y2 = $pair->where('posisi', 'Y2')->first();
-                @endphp
-                <tr>
-                    <td>{{ $no }}</td>
-                    <td>{{ $proses[$no] ?? '-' }}</td>
-                    <td>{{ $y1->tanggal ?? '-' }}</td>
-                    <td>{{ $y1->waktu ?? '-' }}</td>
-                    <td>{{ $y1->paraf ?? '-' }}</td>
-                    <td>{{ $y2->tanggal ?? '-' }}</td>
-                    <td>{{ $y2->waktu ?? '-' }}</td>
-                    <td>{{ $y2->paraf ?? '-' }}</td>
-                </tr>
-            @endforeach
-        </tbody>
+    @foreach($steps as $no => $pair)
+        @php
+            $y1 = $pair->where('posisi', 'Y1')->first();
+            $y2 = $pair->where('posisi', 'Y2')->first();
+
+            $tglY1 = $y1?->tanggal ? \Carbon\Carbon::parse($y1->tanggal)->format('d-m-Y') : '-';
+            $tglY2 = $y2?->tanggal ? \Carbon\Carbon::parse($y2->tanggal)->format('d-m-Y') : '-';
+        @endphp
+        <tr>
+    <td>{{ $no }}</td>
+    <td>{{ $proses[$no] ?? '-' }}</td>
+
+    {{-- DISERAHKAN --}}
+    <td>{{ $tglY1 }}</td>
+    <td>{{ $y1->waktu ?? '-' }}</td>
+    <td><strong>{{ $y1->paraf ?? '-' }}</strong></td>
+
+    {{-- DITERIMA --}}
+    <td>{{ $tglY2 }}</td>
+    <td>{{ $y2->waktu ?? '-' }}</td>
+    <td><strong>{{ $y2->paraf ?? '-' }}</strong></td>
+</tr>
+
+    @endforeach
+</tbody>
     </table>
 
     {{-- CATATAN --}}

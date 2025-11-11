@@ -7,23 +7,24 @@
 
     // Hak akses
     $allowed = [
-        'admin' => [
-            ['step' => 1, 'pos' => 'Y1'], ['step' => 1, 'pos' => 'Y2'],
-            ['step' => 6, 'pos' => 'Y2'],
-            ['step' => 7, 'pos' => 'Y1'], ['step' => 7, 'pos' => 'Y2'],
-        ],
-        'kepala_biro' => [
-            ['step' => 2, 'pos' => 'Y1'],
-            ['step' => 5, 'pos' => 'Y2'],
-            ['step' => 6, 'pos' => 'Y1'],
-        ],
-        'penera' => [
-            ['step' => 2, 'pos' => 'Y2'],
-            ['step' => 3, 'pos' => 'Y1'], ['step' => 3, 'pos' => 'Y2'],
-            ['step' => 4, 'pos' => 'Y1'], ['step' => 4, 'pos' => 'Y2'],
-            ['step' => 5, 'pos' => 'Y1'],
-        ],
-    ];
+    'admin' => [
+        ['step' => 1, 'pos' => 'Y1'],
+        ['step' => 6, 'pos' => 'Y2'],
+        ['step' => 7, 'pos' => 'Y1'], ['step' => 7, 'pos' => 'Y2'],
+    ],
+    'kepala_biro' => [
+        ['step' => 1, 'pos' => 'Y2'],
+        ['step' => 2, 'pos' => 'Y1'],
+        ['step' => 5, 'pos' => 'Y2'],
+        ['step' => 6, 'pos' => 'Y1'],
+    ],
+    'penera' => [
+        ['step' => 2, 'pos' => 'Y2'],
+        ['step' => 3, 'pos' => 'Y1'], ['step' => 3, 'pos' => 'Y2'],
+        ['step' => 4, 'pos' => 'Y1'], ['step' => 4, 'pos' => 'Y2'],
+        ['step' => 5, 'pos' => 'Y1'],
+    ],
+];
 
     if (!function_exists('canFillStep')) {
         function canFillStep($role, $stepNo, $pos, $allowed) {

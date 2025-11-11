@@ -94,12 +94,20 @@
             </div>
         </div>
 
-        {{-- Tombol Simpan --}}
-        <div class="mt-6 flex justify-end">
-            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                💾 Simpan
-            </button>
-        </div>
+        {{-- 💾 Tombol Aksi --}}
+            <div class="mt-6 flex justify-between items-center">
+                {{-- Tombol Kembali ke Dashboard --}}
+                <a href="{{ route('dashboard') }}"
+                class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 transition">
+                    ⬅️ Kembali
+                </a>
+
+                {{-- Tombol Simpan --}}
+                <button type="submit"
+                    class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                    💾 Simpan
+                </button>
+            </div>
     </form>
 @endif
 
@@ -107,114 +115,136 @@
     {{-- ========================================================= --}}
     {{-- FORM UNTUK PENERA --}}
     {{-- ========================================================= --}}
-    @if($role === 'penera')
-        <form action="{{ route('surat_tugas.realisasi.update', $surat->id) }}" method="POST">
-            @csrf
-            @method('PUT')
-
-            <div class="bg-white shadow rounded p-5">
-                <h3 class="font-semibold mb-3 text-lg text-center">🪪 Kartu Tugas</h3>
-
-                {{-- 💡 Tabel Realisasi Tanggal --}}
-                <div class="mt-4">
-                    <h4 class="font-semibold mb-2 text-md">📆 Realisasi Tanggal dan Jam Orang</h4>
-
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full border text-center text-sm">
-                            <thead class="bg-gray-100">
-                                <tr>
-                                    <th class="border p-2">Tgl</th>
-                                    @for ($i = 1; $i <= 10; $i++)
-                                        <th colspan="2" class="border p-2">B{{ $i }}</th>
-                                    @endfor
-                                </tr>
-                                <tr>
-                                    <th class="border p-1">N/L</th>
-                                    @for ($i = 1; $i <= 10; $i++)
-                                        <th class="border p-1">N</th>
-                                        <th class="border p-1">L</th>
-                                    @endfor
-                                </tr>
-                            </thead>
-                            <tbody>
+@if($role === 'penera')
     @php
-        $namaPeneraDipilih = collect($peneraTugas)->pluck('nama_penera')->toArray();
+        // Ambil data penera login (biar bisa tampil data sebelumnya)
+        $peneraUser = $peneraTugas->where('nama_penera', Auth::user()->nama)->first();
+
+        // Map nama → kode prefix
         $mapKode = [
             'Pak Candra' => 'c',
             'Pak Rizqi' => 'r',
             'Pak Rino' => 'd',
         ];
-        $rows = [];
-        foreach ($namaPeneraDipilih as $p) {
-            if (isset($mapKode[$p])) $rows[$mapKode[$p]] = $p;
-        }
     @endphp
-    @foreach ($rows as $prefix => $namaPenera)
-        <tr>
-            <td class="border p-1 font-semibold">{{ $namaPenera }}</td>
-            @for ($i = 1; $i <= 10; $i++)
-                <td class="border p-1">
-                    <input type="text" name="realisasi_b{{ $i }}_{{ $prefix }}1"
-                        value="{{ old('realisasi_b'.$i.'_'.$prefix.'1', $peneraTugas->where('nama_penera', $namaPenera)->first()?->{'realisasi_b'.$i.'_'.$prefix.'1'} ?? '') }}"
-                        class="w-full border rounded p-1 text-center">
-                </td>
-                <td class="border p-1">
-                    <input type="text" name="realisasi_b{{ $i }}_{{ $prefix }}2"
-                        value="{{ old('realisasi_b'.$i.'_'.$prefix.'2', $peneraTugas->where('nama_penera', $namaPenera)->first()?->{'realisasi_b'.$i.'_'.$prefix.'2'} ?? '') }}"
-                        class="w-full border rounded p-1 text-center">
-                </td>
-            @endfor
-        </tr>
-    @endforeach
-</tbody>
-                        </table>
-                    </div>
+
+    <form action="{{ route('surat_tugas.realisasi.update', $surat->id) }}" method="POST">
+        @csrf
+        @method('PUT')
+
+        <div class="bg-white shadow rounded p-5">
+            <h3 class="font-semibold mb-3 text-lg text-center">🪪 Kartu Tugas</h3>
+
+            {{-- 💡 Tabel Realisasi Tanggal --}}
+            <div class="mt-4">
+                <h4 class="font-semibold mb-2 text-md">📆 Realisasi Tanggal dan Jam Orang</h4>
+
+                {{-- ✅ Perbaikan: peneraUser didefinisikan di atas --}}
+                <div class="grid grid-cols-5 gap-2 mb-4">
+                    @for ($i = 1; $i <= 10; $i++)
+                        <div>
+                            <label class="block text-sm">Tgl B{{ $i }}</label>
+                            <input type="date" name="realisasi_tgl_b{{ $i }}"
+                                value="{{ old('realisasi_tgl_b'.$i, $peneraUser?->{'realisasi_tgl_b'.$i} ?? '') }}"
+                                class="w-full border rounded p-1 text-center">
+                        </div>
+                    @endfor
                 </div>
 
-                {{-- Catatan --}}
-                <div class="mt-4">
-                    <label class="block text-sm">Catatan Pelaksanaan / Kendala / Progres / DLL</label>
-                    @php
-                        $peneraUser = $peneraTugas->where('nama_penera', Auth::user()->nama)->first();
-                    @endphp
-
-                    <textarea name="catatan" rows="5" maxlength="700"
-                        class="w-full border rounded p-2">{{ old('catatan', $peneraUser->catatan ?? '') }}</textarea>
-                </div>
-
-                {{-- Jam Orang + Mulai + Selesai --}}
-                <div class="grid grid-cols-3 gap-4 mt-5">
-                    <div>
-                        <label class="block text-sm">Jam Orang</label>
-                        <input type="text" name="realisasi_jam_orang"
-                            value="{{ old('realisasi_jam_orang', $peneraUser->realisasi_jam_orang ?? '') }}"
-                            class="w-full border rounded p-2" placeholder="Masukkan jumlah jam">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm">Mulai</label>
-                        <input type="date" name="realisasi_mulai"
-                            value="{{ old('realisasi_mulai', $peneraUser->realisasi_mulai ?? '') }}"
-                            class="w-full border rounded p-2">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm">Selesai</label>
-                        <input type="date" name="realisasi_selesai"
-                            value="{{ old('realisasi_selesai', $peneraUser->realisasi_selesai ?? '') }}"
-                            class="w-full border rounded p-2">
-                    </div>
-                </div>
-
-                {{-- Tombol Simpan --}}
-                <div class="mt-6 flex justify-end">
-                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                        💾 Simpan
-                    </button>
+                {{-- 🧾 Tabel N/L --}}
+                <div class="overflow-x-auto">
+                    <table class="min-w-full border text-center text-sm">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="border p-2">Nama Penera</th>
+                                @for ($i = 1; $i <= 10; $i++)
+                                    <th colspan="2" class="border p-2">B{{ $i }}</th>
+                                @endfor
+                            </tr>
+                            <tr>
+                                <th class="border p-1">N/L</th>
+                                @for ($i = 1; $i <= 10; $i++)
+                                    <th class="border p-1">N</th>
+                                    <th class="border p-1">L</th>
+                                @endfor
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($peneraTugas as $p)
+                                @php
+                                    $prefix = $mapKode[$p->nama_penera] ?? null;
+                                @endphp
+                                @if ($prefix)
+                                    <tr>
+                                        <td class="border p-1 font-semibold">{{ $p->nama_penera }}</td>
+                                        @for ($i = 1; $i <= 10; $i++)
+                                            <td class="border p-1">
+                                                <input type="text" name="realisasi_b{{ $i }}_{{ $prefix }}1"
+                                                    value="{{ old('realisasi_b'.$i.'_'.$prefix.'1', $p->{'realisasi_b'.$i.'_'.$prefix.'1'} ?? '') }}"
+                                                    class="w-full border rounded p-1 text-center">
+                                            </td>
+                                            <td class="border p-1">
+                                                <input type="text" name="realisasi_b{{ $i }}_{{ $prefix }}2"
+                                                    value="{{ old('realisasi_b'.$i.'_'.$prefix.'2', $p->{'realisasi_b'.$i.'_'.$prefix.'2'} ?? '') }}"
+                                                    class="w-full border rounded p-1 text-center">
+                                            </td>
+                                        @endfor
+                                    </tr>
+                                @endif
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
             </div>
-        </form>
-    @endif
+
+            {{-- 🗒️ Catatan --}}
+            <div class="mt-4">
+                <label class="block text-sm">Catatan Pelaksanaan / Kendala / Progres / DLL</label>
+                <textarea name="catatan" rows="5" maxlength="700"
+                    class="w-full border rounded p-2">{{ old('catatan', $peneraUser->catatan ?? '') }}</textarea>
+            </div>
+
+            {{-- 🕓 Jam Orang + Mulai + Selesai --}}
+            <div class="grid grid-cols-3 gap-4 mt-5">
+                <div>
+                    <label class="block text-sm">Jam Orang</label>
+                    <input type="text" name="realisasi_jam_orang"
+                        value="{{ old('realisasi_jam_orang', $peneraUser->realisasi_jam_orang ?? '') }}"
+                        class="w-full border rounded p-2" placeholder="Masukkan jumlah jam">
+                </div>
+
+                <div>
+                    <label class="block text-sm">Mulai</label>
+                    <input type="date" name="realisasi_mulai"
+                        value="{{ old('realisasi_mulai', $peneraUser->realisasi_mulai ?? '') }}"
+                        class="w-full border rounded p-2">
+                </div>
+
+                <div>
+                    <label class="block text-sm">Selesai</label>
+                    <input type="date" name="realisasi_selesai"
+                        value="{{ old('realisasi_selesai', $peneraUser->realisasi_selesai ?? '') }}"
+                        class="w-full border rounded p-2">
+                </div>
+            </div>
+
+            {{-- 💾 Tombol Aksi --}}
+            <div class="mt-6 flex justify-between items-center">
+                {{-- Tombol Kembali ke Dashboard --}}
+                <a href="{{ route('dashboard') }}"
+                class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 transition">
+                    ⬅️ Kembali
+                </a>
+
+                {{-- Tombol Simpan --}}
+                <button type="submit"
+                    class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                    💾 Simpan
+                </button>
+            </div>
+        </div>
+    </form>
+@endif
 
 </div>
 @endsection

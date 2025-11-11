@@ -41,4 +41,5 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{id}/downloadPdf', [SuratTugasController::class, 'downloadPdf'])->name('downloadPdf');
         Route::put('/{id}/realisasi', [SuratTugasController::class, 'realisasiUpdate'])->name('realisasi.update');
     });
+
 });

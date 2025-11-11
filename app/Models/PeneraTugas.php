@@ -19,7 +19,10 @@ class PeneraTugas extends Model
         'realisasi_jam_orang',
         'realisasi_mulai',
         'realisasi_selesai',
-        // Kolom tambahan realisasi (B1–B10)
+        // Tanggal-tanggal
+        'realisasi_tgl_b1','realisasi_tgl_b2','realisasi_tgl_b3','realisasi_tgl_b4','realisasi_tgl_b5',
+        'realisasi_tgl_b6','realisasi_tgl_b7','realisasi_tgl_b8','realisasi_tgl_b9','realisasi_tgl_b10',
+        // Nilai N/L
         'realisasi_b1_c1','realisasi_b1_c2','realisasi_b1_r1','realisasi_b1_r2','realisasi_b1_d1','realisasi_b1_d2',
         'realisasi_b2_c1','realisasi_b2_c2','realisasi_b2_r1','realisasi_b2_r2','realisasi_b2_d1','realisasi_b2_d2',
         'realisasi_b3_c1','realisasi_b3_c2','realisasi_b3_r1','realisasi_b3_r2','realisasi_b3_d1','realisasi_b3_d2',
@@ -34,10 +37,6 @@ class PeneraTugas extends Model
 
     public function suratTugas()
     {
-        return $this->belongsTo(SuratTugas::class, 'surat_tugas_id', 'id');
+        return $this->belongsTo(SuratTugas::class, 'surat_tugas_id');
     }
-
-    
-
-
 }

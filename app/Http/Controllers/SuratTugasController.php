@@ -49,33 +49,83 @@ class SuratTugasController extends Controller
     ]);
 
     $dataToSave = array_merge($validated, [
-        'kabiro_kalibrasi' => $request->user()->nama ?? 'Dwi Adi',
-        'status' => 'Draft',
-        'tanggal' => now(),
+    'kabiro_kalibrasi' => $request->user()->nama ?? 'Dwi Adi',
+    'status' => 'Draft',
+    'tanggal' => $request->tanggal ?? now(),
     ]);
 
     $surat = SuratTugas::create($dataToSave);
 
     // Simpan daftar penera (jika dipilih)
     if ($request->filled('penera')) {
-        foreach ($request->input('penera') as $p) {
-            $surat->peneras()->create([
-                'nama_penera' => $p,
-            ]);
+    // Mapping nama -> NIP
+    $nipMap = [
+        'Pak Candra' => '105184526',
+        'Pak Rizqi'  => '022106772',
+        'Pak Rino'   => '221017000',
+    ];
+
+    foreach ($request->input('penera') as $p) {
+        // Normalisasi nama agar format seragam (misal "penera rino" jadi "Pak Rino")
+        $nama = strtolower(trim($p));
+        if (str_contains($nama, 'candra')) {
+            $namaPenera = 'Pak Candra';
+        } elseif (str_contains($nama, 'rizqi') || str_contains($nama, 'rizky')) {
+            $namaPenera = 'Pak Rizqi';
+        } elseif (str_contains($nama, 'rino')) {
+            $namaPenera = 'Pak Rino';
+        } else {
+            $namaPenera = $p;
+        }
+
+        $surat->peneras()->create([
+            'nama_penera' => $namaPenera,
+            'nip' => $nipMap[$namaPenera] ?? '-', // otomatis isi NIP sesuai nama
+        ]);
         }
     }
 
     return redirect()->route('dashboard')->with('msg', '✅ Surat tugas berhasil dibuat.');
 }
 
-    public function show($id)
-    {
-        $surat = SuratTugas::with('peneras')->findOrFail($id);
-        $role = Auth::user()->role ?? null;
-        $peneraTugas = $surat->peneras;
+public function show($id)
+{
+    $surat = SuratTugas::with('peneras')->findOrFail($id);
+    $role = Auth::user()->role ?? null;
+    $user = Auth::user();
 
-        return view('surat_tugas.detail', compact('surat', 'role', 'peneraTugas'));
+    // Normalisasi nama login agar cocok dengan database
+    $namaLogin = strtolower(trim($user->nama));
+    if (str_contains($namaLogin, 'rino')) {
+        $namaPenera = 'Pak Rino';
+    } elseif (str_contains($namaLogin, 'rizqi') || str_contains($namaLogin, 'rizky')) {
+        $namaPenera = 'Pak Rizqi';
+    } elseif (str_contains($namaLogin, 'candra')) {
+        $namaPenera = 'Pak Candra';
+    } else {
+        $namaPenera = $user->nama; // fallback
     }
+
+    // Cek data penera dari relasi surat_tugas
+    $peneraTugas = $surat->peneras;
+    $peneraUser = $peneraTugas->where('nama_penera', $namaPenera)->first();
+
+    // Jika belum ada data penera, buat instance kosong (biar view gak error)
+    if (!$peneraUser) {
+        $peneraUser = new \App\Models\PeneraTugas([
+            'nama_penera' => $namaPenera,
+            'nip' => match($namaPenera) {
+                'Pak Candra' => '105184526',
+                'Pak Rizqi'  => '022106772',
+                'Pak Rino'   => '221017000',
+                default => '-',
+            },
+        ]);
+    }
+
+    return view('surat_tugas.detail', compact('surat', 'role', 'peneraTugas', 'peneraUser'));
+}
+
 
     public function edit($id)
     {
@@ -116,73 +166,101 @@ class SuratTugasController extends Controller
         ->with('msg', '✅ Data surat tugas berhasil diperbarui.');
 }
 
-    public function realisasiUpdate(Request $request, $id)
+   public function realisasiUpdate(Request $request, $id)
 {
     $surat = SuratTugas::findOrFail($id);
     $user = Auth::user();
 
-    // cari atau buat baru penera
-    $penera = PeneraTugas::where('surat_tugas_id', $id)
-        ->where('nama_penera', $user->nama)
-        ->first() ?? new PeneraTugas([
-            'surat_tugas_id' => $id,
-            'nama_penera' => $user->nama,
-            'nip' => $user->nip ?? '-',
-        ]);
+    // 🧩 Normalisasi nama penera
+    $nama = strtolower(trim($user->nama));
+    if (str_contains($nama, 'rino')) {
+        $namaPenera = 'Pak Rino';
+    } elseif (str_contains($nama, 'rizqi') || str_contains($nama, 'rizky')) {
+        $namaPenera = 'Pak Rizqi';
+    } elseif (str_contains($nama, 'candra')) {
+        $namaPenera = 'Pak Candra';
+    } else {
+        $namaPenera = 'Pak Rizqi';
+    }
 
-    // daftar field yang boleh diupdate
-    $fields = [
-        'catatan', 'realisasi_jam_orang',
-        'realisasi_mulai', 'realisasi_selesai'
-    ];
+    // 🧩 Ambil atau buat record penera
+    $penera = PeneraTugas::firstOrNew([
+        'surat_tugas_id' => $id,
+        'nama_penera' => $namaPenera,
+    ]);
 
-    // ambil semua input dari request
-    foreach ($fields as $f) {
-        // hanya ubah kalau field dikirim dan tidak null
-        if ($request->filled($f)) {
-            $penera->$f = $request->input($f);
+    // ✅ Simpan hanya jika field diisi (biar tidak ketimpa null)
+    for ($i = 1; $i <= 10; $i++) {
+        $key = "realisasi_tgl_b{$i}";
+        if ($request->filled($key)) {
+            $penera->$key = $request->input($key);
         }
     }
 
-    // proses kolom realisasi B1–B10
-    $map = [
+    // ✅ Simpan N/L (prefix tiap penera)
+    $mapPrefix = [
         'Pak Candra' => 'c',
-        'Pak Rizqi' => 'r',
-        'Pak Rino' => 'd',
+        'Pak Rizqi'  => 'r',
+        'Pak Rino'   => 'd',
     ];
-    $prefix = $map[$user->nama] ?? null;
+    $prefix = $mapPrefix[$namaPenera] ?? null;
 
     if ($prefix) {
         for ($i = 1; $i <= 10; $i++) {
             foreach ([1, 2] as $n) {
-                $key = "realisasi_b{$i}_{$prefix}{$n}";
-                if ($request->filled($key)) {
-                    $penera->$key = $request->input($key);
+                $field = "realisasi_b{$i}_{$prefix}{$n}";
+                if ($request->filled($field)) {
+                    $penera->$field = $request->input($field);
                 }
             }
         }
     }
 
+    // ✅ Update catatan dan bagian realisasi umum hanya jika ada isinya
+    foreach (['catatan', 'realisasi_jam_orang', 'realisasi_mulai', 'realisasi_selesai'] as $field) {
+        if ($request->filled($field)) {
+            $penera->$field = $request->input($field);
+        }
+    }
+
+    // ✅ Isi NIP otomatis
+    $nipMap = [
+        'Pak Candra' => '105184526',
+        'Pak Rizqi'  => '022106772',
+        'Pak Rino'   => '221017000',
+    ];
+    $penera->nip = $nipMap[$namaPenera] ?? '-';
+
+    // 💾 Simpan data
     $penera->save();
 
-    return redirect()->route('surat_tugas.show', $id)
-        ->with('msg', '✅ Data realisasi berhasil diperbarui tanpa kehilangan data sebelumnya.');
+    return redirect()
+        ->route('surat_tugas.show', $id)
+        ->with('msg', "✅ Data realisasi untuk {$namaPenera} berhasil diperbarui tanpa menghapus data lain.");
 }
+
 
     public function preview($id)
 {
-    $surat = \App\Models\SuratTugas::with('peneras')->findOrFail($id);
-    $peneraTugas = $surat->peneras;
+    $surat = SuratTugas::findOrFail($id);
 
-    // ✅ kalau ada query ?download=true, maka langsung buat PDF
-    if (request()->has('download')) {
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('surat_tugas.preview', compact('surat', 'peneraTugas'))
-            ->setPaper([0, 0, 595.28, 420.94], 'landscape');
+    // Ambil semua penera untuk surat ini
+    $peneraTugas = PeneraTugas::where('surat_tugas_id', $id)->get();
 
-        return $pdf->download('Surat_Tugas_' . ($surat->nomor_pesanan ?? $surat->id) . '.pdf');
+    // Mapping NIP agar tetap muncul walau NULL
+    $nipMap = [
+        'Pak Candra' => '105184526',
+        'Pak Rizqi'  => '022106772',
+        'Pak Rino'   => '221017000',
+        'Penera Rino' => '221017000', // ✅ Tambahkan ini biar ikut terbaca
+    ];
+
+    foreach ($peneraTugas as $p) {
+        if (empty($p->nip)) {
+            $p->nip = $nipMap[$p->nama_penera] ?? '-';
+        }
     }
 
-    // ✅ kalau tidak ada ?download=true → tampilkan halaman biasa
     return view('surat_tugas.preview', compact('surat', 'peneraTugas'));
 }
 
