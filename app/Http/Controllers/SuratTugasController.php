@@ -240,19 +240,19 @@ public function show($id)
 }
 
 
-    public function preview($id)
+public function preview(Request $request, $id)
 {
     $surat = SuratTugas::findOrFail($id);
 
     // Ambil semua penera untuk surat ini
-    $peneraTugas = PeneraTugas::where('surat_tugas_id', $id)->get();
+    $peneraTugas = \App\Models\PeneraTugas::where('surat_tugas_id', $id)->get();
 
     // Mapping NIP agar tetap muncul walau NULL
     $nipMap = [
         'Pak Candra' => '105184526',
         'Pak Rizqi'  => '022106772',
         'Pak Rino'   => '221017000',
-        'Penera Rino' => '221017000', // ✅ Tambahkan ini biar ikut terbaca
+        'Penera Rino' => '221017000',
     ];
 
     foreach ($peneraTugas as $p) {
@@ -261,8 +261,20 @@ public function show($id)
         }
     }
 
+    // 🧠 Cek apakah ada parameter download
+    if ($request->query('download') === 'true') {
+        // ✅ Generate PDF pakai DomPDF
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('surat_tugas.preview', compact('surat', 'peneraTugas'))
+            ->setPaper([0, 0, 595.28, 842], 'portrait'); // A4 ukuran vertikal
+
+        // ✅ Kembalikan file download
+        return $pdf->download('Surat_Tugas_' . ($surat->nomor_pesanan ?? $surat->id) . '.pdf');
+    }
+
+    // Kalau tidak ada ?download=true → tampilkan preview biasa
     return view('surat_tugas.preview', compact('surat', 'peneraTugas'));
 }
+
 
         public function downloadPdf($id)
     {
